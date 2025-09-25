@@ -102,9 +102,6 @@ stack.push(10)  // This will cause a "stack overflow" error
 // log the last element in the stack
 console.log('last element: ', stack.peek())
 
-// Let's add a proper peek method to safely view the top element
-// For now, we'll comment out the problematic line and show the correct way:
-
 // Demonstrate popping elements from the stack
 // Elements will be removed in reverse order (LIFO): 9, 8, 7, 6, 5, 4, 3, 2, 1
 console.log(stack.pop())  // Should print: 9
