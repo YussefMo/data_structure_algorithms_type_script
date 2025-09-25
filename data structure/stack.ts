@@ -2,18 +2,37 @@
 const MAX_SIZE = 9
 
 /**
- * Stack Data Structure Implementation
+ * Generic Stack Data Structure Implementation
  * 
  * A stack is a linear data structure that follows the Last In, First Out (LIFO) principle.
  * Elements are added and removed from the same end, called the "top" of the stack.
  * 
+ * This implementation uses TypeScript generics (<T>) to allow flexibility in data types.
+ * You can create stacks for any type: numbers, strings, objects, etc.
+ * 
  * Common operations:
  * - push(): Add an element to the top
  * - pop(): Remove and return the top element
+ * - peek(): View the top element without removing it
+ * - undo(): Restore the last popped element
+ * 
+ * @template T The type of elements stored in the stack
+ * 
+ * @example
+ * // Create a stack for numbers
+ * const numberStack = new Stack<number>()
+ * numberStack.push(1)
+ * numberStack.push(2)
+ * 
+ * @example
+ * // Create a stack for strings
+ * const stringStack = new Stack<string>()
+ * stringStack.push("hello")
+ * stringStack.push("world")
  */
-class Stack {
-  // Internal array to store stack elements
-  private elements: number[]
+class Stack<T> {
+  // Internal array to store stack elements of type T
+  private elements: T[]
   
   // Index of the top element (-1 means empty stack)
   topLevel: number 
@@ -21,8 +40,8 @@ class Stack {
   // Current number of elements in the stack
   length: number
   
-  // to save last element for undo method
-  element: number
+  // Stores the last popped element for undo functionality
+  private element: T | undefined
   
   /**
    * Constructor - Initialize an empty stack
@@ -31,13 +50,14 @@ class Stack {
     this.elements = []      // Initialize empty array to store elements
     this.topLevel = -1      // -1 indicates empty stack
     this.length = 0         // Start with 0 elements
+    this.element = undefined // No element has been popped yet
   }
   
   /**
    * Push operation - Add an element to the top of the stack
-   * @param value - The number to be added to the stack
+   * @param value - The element of type T to be added to the stack
    */
-  push(value: number) {
+  push(value: T) {
     // Check for stack overflow (when stack is full)
     if (this.topLevel >= MAX_SIZE - 1) {
       console.error('stack overflow')
@@ -51,21 +71,22 @@ class Stack {
   
   /**
    * Pop operation - Remove and return the top element from the stack
-   * @returns The removed element, or undefined if stack is empty
+   * @returns The removed element of type T, or undefined if stack is empty
    */
-  pop() {
+  pop(): T | undefined {
     // Check for stack underflow (when stack is empty)
     if (this.topLevel < 0) {
       console.error('stack underflow')
-      return
+      return undefined
     } else {
       const value = this.elements[this.topLevel]  // Get the top element
-      this.element = value                        // save the last deleted element
+      this.element = value                        // Save the last deleted element for undo
       this.topLevel--                             // Move pointer down
       this.length--                               // Decrement count
       return value                                // Return the removed element
     }
   }
+  
   /**
    * Peek operation - View the top element without removing it
    * 
@@ -73,25 +94,31 @@ class Stack {
    * modifying the stack structure. Useful for checking the next element
    * that would be returned by pop() without actually removing it.
    * 
-   * @returns The top element of the stack, or undefined if stack is empty
+   * @returns The top element of type T, or undefined if stack is empty
    */
-  peek() {
+  peek(): T | undefined {
     // Check if stack is empty
     if (this.topLevel < 0) {
       console.error('stack underflow')
-      return
+      return undefined
     } else {
       // Return the top element without removing it
       return this.elements[this.topLevel]
     }
   }
+  
   /**
-   * undo operation - Restore the last deleted element to the stack
-   * @returns The restored element, or undefined if no element was deleted
+   * Undo operation - Restore the last popped element to the stack
+   * 
+   * This method pushes back the last element that was removed by pop().
+   * Can only undo the most recent pop operation.
+   * 
+   * @returns void
    */
-  undo() {
-    if (this.element) {
+  undo(): void {
+    if (this.element !== undefined) {
       this.push(this.element)
+      this.element = undefined  // Clear the saved element after restoring
     } else {
       console.error('no element was deleted')
     }
@@ -99,7 +126,7 @@ class Stack {
 }
 
 // Create a new instance of the Stack class
-const stack = new Stack()
+const stack = new Stack<number>()
 
 // Demonstrate pushing elements onto the stack
 // Elements will be stored in LIFO (Last In, First Out) order
@@ -114,6 +141,8 @@ stack.push(8)
 stack.push(9)   // This will be the last element that fits (MAX_SIZE = 9)
 stack.push(10)  // This will cause a "stack overflow" error
 
+// log the whole stack
+console.log(stack)
 // log the last element in the stack
 console.log('last element: ', stack.peek())
 
@@ -131,3 +160,27 @@ console.log(stack.pop())  // Should print: 3
 console.log(stack.pop())  // Should print: 2
 console.log(stack.pop())  // Should print: 1
 console.log(stack.pop())  // This will cause a "stack underflow" error (stack is empty)
+
+/**
+ * Demonstration of Stack usage with strings
+ * 
+ * This example creates a stack of strings and shows basic operations:
+ * - Pushing three string elements ('a', 'b', 'c')
+ * - Logging the stack state
+ * - Popping all elements in LIFO order
+ * 
+ * Expected output:
+ * - Stack will contain ['a', 'b', 'c'] (with 'c' on top)
+ * - Pop operations will return: 'c', 'b', 'a'
+ */
+const stack2 = new Stack<string>()
+
+stack2.push('a')
+stack2.push('b')
+stack2.push('c')
+
+console.log(stack2)
+
+console.log(stack2.pop())
+console.log(stack2.pop())
+console.log(stack2.pop())
