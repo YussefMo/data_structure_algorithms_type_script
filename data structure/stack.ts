@@ -21,6 +21,9 @@ class Stack {
   // Current number of elements in the stack
   length: number
   
+  // to save last element for undo method
+  element: number
+  
   /**
    * Constructor - Initialize an empty stack
    */
@@ -57,6 +60,7 @@ class Stack {
       return
     } else {
       const value = this.elements[this.topLevel]  // Get the top element
+      this.element = value                        // save the last deleted element
       this.topLevel--                             // Move pointer down
       this.length--                               // Decrement count
       return value                                // Return the removed element
@@ -79,6 +83,17 @@ class Stack {
     } else {
       // Return the top element without removing it
       return this.elements[this.topLevel]
+    }
+  }
+  /**
+   * undo operation - Restore the last deleted element to the stack
+   * @returns The restored element, or undefined if no element was deleted
+   */
+  undo() {
+    if (this.element) {
+      this.push(this.element)
+    } else {
+      console.error('no element was deleted')
     }
   }
 }
@@ -105,6 +120,8 @@ console.log('last element: ', stack.peek())
 // Demonstrate popping elements from the stack
 // Elements will be removed in reverse order (LIFO): 9, 8, 7, 6, 5, 4, 3, 2, 1
 console.log(stack.pop())  // Should print: 9
+console.log(stack.pop())  // Should print: 8
+stack.undo()              // will undo the last pop
 console.log(stack.pop())  // Should print: 8
 console.log(stack.pop())  // Should print: 7
 console.log(stack.pop())  // Should print: 6
