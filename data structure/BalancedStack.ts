@@ -1,51 +1,4 @@
-/**
- * Defines the maximum capacity of the stack.
- * This constant prevents stack overflow by limiting the number of elements that can be pushed onto the stack.
- * @type {number}
- */
-const MAX_SIZE = 9
-
-/**
- * Generic Stack Data Structure Implementation
- * 
- * A stack is a linear data structure that follows the Last In, First Out (LIFO) principle.
- * Elements are added and removed from the same end, called the "top" of the stack.
- * 
- * This implementation uses TypeScript generics (<T>) to allow flexibility in data types.
- * You can create stacks for any type: numbers, strings, objects, etc.
- * 
- * **Time Complexity:**
- * - Push: O(1) - Amortized constant time (due to array resizing, but typically constant)
- * - Pop: O(1) - Constant time
- * - Peek: O(1) - Constant time
- * - Undo: O(1) - Constant time
- * 
- * **Space Complexity:**
- * - O(n) - Where n is the number of elements in the stack.
- * 
- * The stack has a maximum capacity defined by the `MAX_SIZE` constant to prevent memory overflow.
- * 
- * Common operations:
- * - push(): Add an element to the top
- * - pop(): Remove and return the top element
- * - peek(): View the top element without removing it
- * - undo(): Restore the last popped element
- * 
- * @template T The type of elements stored in the stack
- * 
- * @example
- * // Create a stack for numbers
- * const numberStack = new Stack<number>()
- * numberStack.push(1)
- * numberStack.push(2)
- * 
- * @example
- * // Create a stack for strings
- * const stringStack = new Stack<string>()
- * stringStack.push("hello")
- * stringStack.push("world")
- */
-class Stack<T> {
+class BalancedStack<T> {
   /**
    * Internal array to store stack elements.
    * @private
@@ -100,15 +53,9 @@ class Stack<T> {
    * myStack.push(20); // Stack: [10, 20]
    */
   push(value: T) {
-    // Check for stack overflow (when stack is full)
-    if (this.topLevel >= MAX_SIZE - 1) {
-      console.error('stack overflow')
-      return
-    } else {
-      this.topLevel++                        // Move to next position
-      this.elements[this.topLevel] = value   // Store the value
-      this.length++                          // Increment count
-    }
+    this.topLevel++                        // Move to next position
+    this.elements[this.topLevel] = value   // Store the value
+    this.length++                          // Increment count
   }
   
   /**
@@ -233,78 +180,137 @@ class Stack<T> {
 }
 
 /**
- * Demonstration of Stack usage with numbers.
+ * Global instance of BalancedStack used for checking balanced expressions.
  * 
- * This example showcases the basic operations of the `Stack` class using number elements.
- * It demonstrates:
- * 1. Pushing elements onto the stack, illustrating the LIFO principle and stack overflow handling.
- * 2. Peeking at the top element without removing it.
- * 3. Popping elements from the stack, showing the LIFO removal order and stack underflow handling.
- * 4. Utilizing the `undo` method to restore a previously popped element.
+ * This stack is specifically designed to handle string characters representing
+ * opening and closing brackets, parentheses, and braces. It serves as a shared
+ * resource for the `isBalanced` function to track opening symbols and match
+ * them with their corresponding closing symbols.
  * 
- * Expected output will show the stack's state after various operations, including:
- * - Stack overflow message when pushing beyond `MAX_SIZE`.
- * - The last element (9) when peeking.
- * - Elements being popped in reverse order of insertion (9, 8, then 8 again due to undo, 7, 6, 5, 4, 3, 2, 1).
- * - Stack underflow message when popping from an empty stack.
+ * **Note:** This global instance creates a shared state across multiple function calls.
+ * For production code, consider creating a new stack instance within each function
+ * call to avoid potential side effects from concurrent usage.
+ * 
+ * @type {BalancedStack<string>}
+ * @global
+ * 
+ * @example
+ * // The stack is used internally by isBalanced function
+ * // Opening brackets are pushed: '(', '{', '['
+ * // Closing brackets trigger pop and comparison: ')', '}', ']'
  */
-// Create a new instance of the Stack class
-const stack = new Stack<number>()
-
-// Demonstrate pushing elements onto the stack
-// Elements will be stored in LIFO (Last In, First Out) order
-stack.push(1)   // Bottom of stack
-stack.push(2)
-stack.push(3)
-stack.push(4)
-stack.push(5)
-stack.push(6)
-stack.push(7)
-stack.push(8)
-stack.push(9)   // This will be the last element that fits (MAX_SIZE = 9)
-stack.push(10)  // This will cause a "stack overflow" error
-
-// log the whole stack
-console.log(stack)
-// log the last element in the stack
-console.log('last element: ', stack.peek())
-
-// Demonstrate popping elements from the stack
-// Elements will be removed in reverse order (LIFO): 9, 8, 7, 6, 5, 4, 3, 2, 1
-console.log(stack.pop())  // Should print: 9
-console.log(stack.pop())  // Should print: 8
-stack.undo()              // will undo the last pop
-console.log(stack.pop())  // Should print: 8
-console.log(stack.pop())  // Should print: 7
-console.log(stack.pop())  // Should print: 6
-console.log(stack.pop())  // Should print: 5
-console.log(stack.pop())  // Should print: 4
-console.log(stack.pop())  // Should print: 3
-console.log(stack.pop())  // Should print: 2
-console.log(stack.pop())  // Should print: 1
-console.log(stack.pop())  // This will cause a "stack underflow" error (stack is empty)
+const balancedStack: BalancedStack<string> = new BalancedStack<string>();
 
 /**
- * Demonstration of Stack usage with strings.
+ * Checks if a given expression has balanced brackets, parentheses, and braces.
  * 
- * This example illustrates the `Stack` class operations using string elements.
- * It demonstrates:
- * 1. Pushing three string elements ('a', 'b', 'c') onto the stack.
- * 2. Logging the entire stack's state after pushing.
- * 3. Popping all elements in LIFO order.
+ * This function validates that every opening symbol ('(', '{', '[') has a corresponding
+ * closing symbol (')', '}', ']') in the correct order. It uses a stack-based approach
+ * to track opening symbols and match them with their closing counterparts.
  * 
- * Expected output:
- * - The stack will contain ['a', 'b', 'c'] with 'c' being the top element after pushes.
- * - Pop operations will return: 'c', then 'b', then 'a'.
+ * **Algorithm:**
+ * 1. Iterate through each character in the expression
+ * 2. Push opening brackets onto the stack
+ * 3. For closing brackets, pop from stack and verify matching pairs
+ * 4. Expression is balanced if stack is empty at the end
+ * 
+ * **Time Complexity:** O(n) - where n is the length of the expression
+ * **Space Complexity:** O(n) - in worst case, all characters are opening brackets
+ * 
+ * @param {string} expression - The string expression to validate for balanced symbols
+ * @returns {boolean} True if all brackets are properly balanced and matched, false otherwise
+ * 
+ * @example
+ * ```typescript
+ * isBalanced("()");           // returns true
+ * isBalanced("({[]})");       // returns true  
+ * isBalanced("([)]");         // returns false - incorrect nesting
+ * isBalanced("((()");         // returns false - unmatched opening
+ * isBalanced("())");          // returns false - unmatched closing
+ * ```
+ * 
+ * @throws {Error} If the stack operations fail (should not occur in normal usage)
+ * 
+ * @see {@link BalancedStack} - The stack implementation used for tracking brackets
  */
-const stack2 = new Stack<string>()
+function isBalanced(expression: string): boolean {
+  for (const char of expression) {
+    if (char === '(' || char === '{' || char === '[') {
+      balancedStack.push(char);
+    } else if (char === ')' || char === '}' || char === ']') {
+      if (balancedStack.isEmpty()) {
+        return false;
+      }
+      const top = balancedStack.pop();
+      if ((char === ')' && top !== '(') ||
+          (char === '}' && top !== '{') ||
+          (char === ']' && top !== '[')) {
+        return false;
+      }
+    }
+  }
+  return balancedStack.isEmpty();
+}
 
-stack2.push('a')
-stack2.push('b')
-stack2.push('c')
+/**
+ * Test expression 1: Simple balanced parentheses.
+ * 
+ * This expression contains only round brackets and represents the most basic
+ * case of balanced symbols. Expected result: true (balanced).
+ * 
+ * @type {string}
+ * @constant
+ */
+const expression1:string = "()";
 
-console.log(stack2)
+/**
+ * Test expression 2: Complex nested balanced expression.
+ * 
+ * This expression demonstrates proper nesting of all three bracket types:
+ * parentheses (), square brackets [], and curly braces {}. The nesting
+ * follows the correct LIFO (Last In, First Out) order. Expected result: true (balanced).
+ * 
+ * @type {string}
+ * @constant
+ */
+const expression2:string = "({[]})";
 
-console.log(stack2.pop())
-console.log(stack2.pop())
-console.log(stack2.pop())
+/**
+ * Test expression 3: Improperly nested brackets.
+ * 
+ * This expression contains brackets that are opened and closed in the wrong order,
+ * violating the LIFO principle required for balanced expressions. The square bracket
+ * is opened after the parenthesis but closed before it. Expected result: false (unbalanced).
+ * 
+ * @type {string}
+ * @constant
+ */
+const expression3:string = "([)]";
+
+/**
+ * Demonstration code for testing the isBalanced function.
+ * 
+ * This section demonstrates the functionality of the `isBalanced` function using
+ * three different test cases that cover various scenarios:
+ * 
+ * 1. **Simple balanced case** (expression1): Tests basic parentheses balancing
+ * 2. **Complex nested case** (expression2): Tests proper nesting of multiple bracket types
+ * 3. **Unbalanced case** (expression3): Tests detection of improperly nested brackets
+ * 
+ * **Expected Output:**
+ * - expression1 "()": true (properly balanced)
+ * - expression2 "({[]})": true (properly nested)
+ * - expression3 "([)]": false (improperly nested)
+ * 
+ * The console output helps verify that the balanced stack algorithm correctly
+ * identifies both valid and invalid bracket arrangements.
+ * 
+ * @example
+ * // Running this code will output:
+ * // true
+ * // true  
+ * // false
+ */
+console.log(isBalanced(expression1)) // true
+console.log(isBalanced(expression2)) // true
+console.log(isBalanced(expression3)) // false
